@@ -1,20 +1,25 @@
 package prueba.wilmer.controlador;
 
+import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 import prueba.wilmer.servicio.PersonaServicio;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import prueba.wilmer.modelo.Persona;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 //Para tener acceso
 @RestController
 public class PersonaControlador {
 
+    List<Persona> listaPersonas = new ArrayList<>();
+
+    Persona obj = new Persona();
     @PostMapping("/guardarPersona")
     public String guardarPersona(
             @RequestParam(value = "ide") String identificacion,
@@ -25,7 +30,6 @@ public class PersonaControlador {
             @RequestParam(value = "fechaNac") String fechaNacimiento)
             {
         String msj = "";
-        Persona obj = null;
         if(PersonaServicio.verificarCedulaEcuatoriana(identificacion)){
             obj = new Persona(
                     PersonaServicio.convertirMayusculas(identificacion),
@@ -35,6 +39,7 @@ public class PersonaControlador {
                     PersonaServicio.convertirMayusculas(telefono),
                     PersonaServicio.convertirMayusculas(fechaNacimiento)
             );
+            this.listaPersonas.add(obj);
             msj = String.format(
                     "<h1 Style='color:green'>Ingreso exitoso</h1> " +
                     "<br><b>Identificacion:</b>  %s " +
@@ -49,6 +54,55 @@ public class PersonaControlador {
             msj = String.format("<h1 Style='color:red'>Error</h1> La cédula %s de identificacion no es ecuatoriana", identificacion);
         }
         return msj;
+    }
+
+    /**
+     * Obtener persona por identificacion
+     * */
+    @GetMapping("/obtenerPersonaPorIdentificacion/{cedula}")
+    public String obtenerPersona(@PathVariable(name ="cedula") String identificacion){
+        String msj = String.format("<h1 Style='color:red'>Error</h1> La cédula %s de identificacion no es ecuatoriana", identificacion);;
+        for (Persona person:listaPersonas) {
+            if (Objects.equals(person.getIdentificacion(), identificacion)) {
+                msj = String.format(
+                        "<h1 Style='color:green'>Ingreso exitoso</h1> " +
+                                "<br><b>Identificacion:</b>  %s " +
+                                "<br><b>Nombre:</b> %s " +
+                                "<br><b>Apellido:</b>  %s " +
+                                "<br><b>Direccion:</b> %s " +
+                                "<br><b>Telefono:</b>  %s " +
+                                "<br><b>Fecha de Nacimiento:</b>  %s ",
+                        person.getIdentificacion(), person.getNombre(), person.getApellido(), person.getDireccion(), person.getTelefono(), person.getFechaNac()
+                );
+            }
+        }
+        return msj;
+
+    }
+
+    @PutMapping("/actualizarPersona/{cedula}")
+    public String actualizarPersona(@PathVariable(name ="cedula") String identificacion, @RequestBody Persona persona){
+        String msj = "No existe";
+        for (Persona person: listaPersonas) {
+            if (Objects.equals(person.getIdentificacion(), identificacion)) {
+                person.setNombre(persona.getNombre());
+                person.setApellido(persona.getApellido());
+                person.setDireccion(persona.getDireccion());
+                person.setTelefono(persona.getTelefono());
+                msj = String.format(
+                        "<h1 Style='color:green'>Ingreso exitoso</h1> " +
+                                "<br><b>Identificacion:</b>  %s " +
+                                "<br><b>Nombre:</b> %s " +
+                                "<br><b>Apellido:</b>  %s " +
+                                "<br><b>Direccion:</b> %s " +
+                                "<br><b>Telefono:</b>  %s " +
+                                "<br><b>Fecha de Nacimiento:</b>  %s ",
+                        person.getIdentificacion(), person.getNombre(), person.getApellido(), person.getDireccion(), person.getTelefono(), person.getFechaNac()
+                );
+            }
+        }
+
+      return msj;
     }
 
 
